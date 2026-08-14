@@ -1,317 +1,140 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <base target="_top">
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Digital Guest Book</title>
-  
-  <!-- Font, Tailwind, FontAwesome, SweetAlert2 -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
-  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-  
-  <style>
-    body { 
-      font-family: 'Inter', sans-serif; 
-      /* Background gradien perpaduan HIJAU dan KUNING */
-      background: linear-gradient(135deg, #10b981 0%, #eab308 100%);
-      min-height: 100vh;
-    }
-    
-    .floating-element { animation: float 6s ease-in-out infinite; }
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-10px); }
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Buku Tamu - UPTD PKM UMANEN</title>
 
-    .pulse-ring { animation: pulse-ring 1.25s cubic-bezier(0.215, 0.61, 0.355, 1) infinite; }
-    @keyframes pulse-ring {
-      0% { transform: scale(0.33); }
-      40%, 50% { opacity: 0; }
-      100% { opacity: 0; transform: scale(1.2); }
-    }
-    
-    /* Styling Canvas Tanda Tangan */
-    .canvas-wrapper { touch-action: none; }
-  </style>
+    <link rel="icon" type="image/png" href="https://i.ibb.co.com/gKyVX1J/favicon-png.png">
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f4f4f4;
+            font-family: sans-serif;
+            overflow: hidden; 
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Mengembalikan background navbar menjadi putih bersih */
+        .navbar {
+            background-color: #ffffff; 
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            display: flex;
+            align-items: center;
+            padding: 10px 20px;
+            z-index: 20;
+        }
+
+        .navbar-brand {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        /* Mengembalikan logo ke format aslinya */
+        .navbar-brand img {
+            height: 40px; 
+            margin-right: 12px;
+            background-color: transparent; 
+            border-radius: 0;
+            padding: 0;
+        }
+
+        /* Mengembalikan warna tulisan menjadi hijau Puskesmas */
+        .navbar-brand h1 {
+            margin: 0;
+            font-size: 18px; 
+            color: #008000; 
+            font-weight: bold;
+        }
+
+        .iframe-container {
+            position: relative;
+            width: 100%;
+            flex-grow: 1;
+            overflow-y: auto; 
+            -webkit-overflow-scrolling: touch; 
+        }
+
+        iframe {
+            display: block;
+            width: 100%;
+            height: 100%;
+            border: none;
+            background: transparent;
+        }
+
+        #loader {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }
+
+        .spinner {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border-left-color: #10b981; 
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .loading-text {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #555;
+            font-weight: bold;
+        }
+    </style>
 </head>
-<!-- Perbaikan scroll sudah dimasukkan di class body ini (items-start, sm:py-10, overflow-x-hidden) -->
-<body class="antialiased flex justify-center items-start p-4 sm:py-10 relative overflow-x-hidden min-h-screen">
+<body>
 
-  <!-- Ornamen Latar Belakang -->
-  <div class="absolute top-10 left-10 w-24 h-24 bg-white/20 rounded-full floating-element"></div>
-  <div class="absolute top-40 right-20 w-16 h-16 bg-white/10 rounded-full floating-element" style="animation-delay: -2s;"></div>
-  <div class="absolute bottom-20 left-1/4 w-20 h-20 bg-white/20 rounded-full floating-element" style="animation-delay: -4s;"></div>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <!-- Link Logo -->
+            <img src="https://i.ibb.co.com/gKyVX1J/favicon-png.png" alt="Logo Puskesmas">
+            <!-- Teks -->
+            <h1>UPTD PUSKESMAS UMANEN</h1>
+        </div>
+    </nav>
 
-  <!-- Main Card Glassmorphism -->
-  <main class="bg-white/95 backdrop-filter backdrop-blur-lg rounded-3xl shadow-2xl border border-white/20 w-full max-w-4xl relative z-10 overflow-hidden transform transition-all">
-    
-    <!-- Header Card (HIJAU ke KUNING) -->
-    <div class="bg-gradient-to-r from-green-600 to-yellow-500 p-8 text-white flex flex-col sm:flex-row items-center justify-between relative overflow-hidden">
-      <div class="absolute inset-0 bg-white/5 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-30"></div>
-      
-      <div class="flex items-center z-10 w-full justify-center sm:justify-start mb-4 sm:mb-0">
-        <div class="relative mr-5 hidden sm:block">
-          <div class="absolute inset-0 bg-white/20 rounded-full pulse-ring"></div>
-          <div class="relative bg-white/20 p-4 rounded-full backdrop-blur-sm border border-white/30">
-            <i class="fas fa-book-open text-3xl text-white"></i>
-          </div>
+    <div class="iframe-container">
+        <div id="loader">
+            <div class="spinner"></div>
+            <div class="loading-text">Memuat Buku Tamu...</div>
         </div>
-        <div class="text-center sm:text-left">
-          <h2 class="text-3xl font-bold tracking-wide">DIGITAL GUEST BOOK</h2>
-          <p class="text-green-50 text-sm mt-1">Sistem Manajemen Kunjungan</p>
-        </div>
-      </div>
+
+        <!-- PASTIKAN ANDA MEMASUKKAN KEMBALI LINK APPS SCRIPT DI BAWAH INI -->
+        <iframe
+            id="app"
+            src="LINK_APPS_SCRIPT_ANDA_DISINI"
+            allowfullscreen="true"
+            onload="hideLoader()">
+        </iframe>
     </div>
 
-    <!-- Form Container -->
-    <div class="p-6 sm:p-10">
-      <h3 class="text-xl font-bold text-gray-800 border-b border-gray-200 pb-3 mb-6 flex items-center">
-        <i class="fas fa-edit text-green-600 mr-3"></i> Formulir Kedatangan Tamu
-      </h3>
+    <script>
+        function hideLoader() {
+            const loader = document.getElementById('loader');
+            if (loader) loader.style.display = 'none';
+        }
+        setTimeout(hideLoader, 8000);
+    </script>
 
-      <form id="guestForm" onsubmit="submitForm(event)" class="space-y-6">
-        
-        <!-- Input Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
-              <i class="fas fa-user mr-2 text-gray-400"></i>Nama Lengkap *
-            </label>
-            <input type="text" id="nama" required placeholder="Contoh: Budi Santoso"
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
-              <i class="fas fa-phone-alt mr-2 text-gray-400"></i>Nomor HP/WhatsApp *
-            </label>
-            <input type="tel" id="noHp" required placeholder="081234567890"
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
-              <i class="fas fa-building mr-2 text-gray-400"></i>Instansi / Asal *
-            </label>
-            <input type="text" id="instansi" required placeholder="Nama Kantor/Alamat"
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300">
-          </div>
-          <div>
-            <label class="block text-sm font-semibold text-gray-700 mb-2">
-              <i class="fas fa-bullseye mr-2 text-gray-400"></i>Tujuan Bertemu *
-            </label>
-            <input type="text" id="tujuan" required placeholder="Nama Petugas/Bagian"
-              class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300">
-          </div>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
-            <i class="fas fa-file-alt mr-2 text-gray-400"></i>Keperluan Kunjungan *
-          </label>
-          <textarea id="keperluan" required rows="3" placeholder="Jelaskan keperluan Anda secara singkat..."
-            class="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 resize-none"></textarea>
-        </div>
-
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
-            <i class="fas fa-camera mr-2 text-gray-400"></i>Foto Pengunjung (Opsional)
-          </label>
-          <input type="file" id="foto" accept="image/*"
-            class="w-full px-4 py-2 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-green-500 transition-all duration-300 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-green-100 file:text-green-700 hover:file:bg-green-200 text-gray-600">
-        </div>
-
-        <div class="mb-8">
-          <label class="block text-sm font-semibold text-gray-700 mb-2 flex items-center justify-between">
-            <span><i class="fas fa-signature mr-2 text-gray-400"></i>Tanda Tangan Digital *</span>
-            <button type="button" onclick="clearCanvas()" class="text-xs text-red-500 hover:text-red-700 bg-red-50 px-3 py-1 rounded-md border border-red-200 transition-colors">
-              <i class="fas fa-eraser mr-1"></i>Hapus
-            </button>
-          </label>
-          <div class="canvas-wrapper w-full h-48 bg-gray-50 border-2 border-dashed border-green-400 rounded-xl relative overflow-hidden group hover:border-green-600 transition-colors">
-            <canvas id="signature-pad" class="absolute inset-0 w-full h-full cursor-crosshair"></canvas>
-            <div class="absolute inset-0 pointer-events-none flex items-center justify-center opacity-30 group-hover:opacity-10 transition-opacity" id="canvas-placeholder">
-              <span class="text-gray-400 font-medium">Tanda Tangan Di Sini</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Tombol Submit (Gradien Hijau ke Kuning) -->
-        <button type="submit" id="btnSubmit"
-          class="w-full bg-gradient-to-r from-green-600 to-yellow-500 hover:from-green-700 hover:to-yellow-600 text-white font-bold py-4 px-6 rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
-          <span id="btnText" class="flex items-center justify-center">
-            <i class="fas fa-paper-plane mr-2"></i> SIMPAN DATA KUNJUNGAN
-          </span>
-        </button>
-      </form>
-    </div>
-  </main>
-
-  <script>
-    // --- KONFIGURASI KANVAS ---
-    const canvas = document.getElementById('signature-pad');
-    const ctx = canvas.getContext('2d');
-    const placeholder = document.getElementById('canvas-placeholder');
-    let isDrawing = false;
-
-    function resizeCanvas() {
-      const ratio = Math.max(window.devicePixelRatio || 1, 1);
-      canvas.width = canvas.offsetWidth * ratio;
-      canvas.height = canvas.offsetHeight * ratio;
-      ctx.scale(ratio, ratio);
-      ctx.lineCap = 'round';
-      ctx.lineJoin = 'round';
-      ctx.lineWidth = 3;
-      ctx.strokeStyle = '#064e3b'; // Warna tinta hijau gelap
-    }
-    
-    window.addEventListener('resize', resizeCanvas);
-    resizeCanvas();
-
-    function getCoordinates(e) {
-      const rect = canvas.getBoundingClientRect();
-      if (e.touches && e.touches.length > 0) {
-        return {
-          x: e.touches[0].clientX - rect.left,
-          y: e.touches[0].clientY - rect.top
-        };
-      }
-      return {
-        x: e.clientX - rect.left,
-        y: e.clientY - rect.top
-      };
-    }
-
-    function startDrawing(e) {
-      e.preventDefault();
-      isDrawing = true;
-      placeholder.style.display = 'none'; // Sembunyikan placeholder
-      const coords = getCoordinates(e);
-      ctx.beginPath();
-      ctx.moveTo(coords.x, coords.y);
-    }
-
-    function draw(e) {
-      if (!isDrawing) return;
-      e.preventDefault();
-      const coords = getCoordinates(e);
-      ctx.lineTo(coords.x, coords.y);
-      ctx.stroke();
-    }
-
-    function stopDrawing(e) {
-      if (!isDrawing) return;
-      e.preventDefault();
-      isDrawing = false;
-    }
-
-    canvas.addEventListener('mousedown', startDrawing);
-    canvas.addEventListener('mousemove', draw);
-    canvas.addEventListener('mouseup', stopDrawing);
-    canvas.addEventListener('mouseout', stopDrawing);
-    canvas.addEventListener('touchstart', startDrawing, {passive: false});
-    canvas.addEventListener('touchmove', draw, {passive: false});
-    canvas.addEventListener('touchend', stopDrawing);
-
-    function clearCanvas() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      placeholder.style.display = 'flex';
-    }
-
-    function isCanvasBlank() {
-      const blank = document.createElement('canvas');
-      blank.width = canvas.width;
-      blank.height = canvas.height;
-      return canvas.toDataURL() === blank.toDataURL();
-    }
-
-    // --- LOGIKA PENGIRIMAN ---
-    function submitForm(e) {
-      e.preventDefault();
-
-      if (isCanvasBlank()) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Perhatian!',
-          text: 'Mohon isi tanda tangan digital Anda terlebih dahulu.',
-          confirmButtonColor: '#059669' // Warna tombol alert hijau
-        });
-        return;
-      }
-
-      // Animasi Loading
-      const btnSubmit = document.getElementById('btnSubmit');
-      const btnText = document.getElementById('btnText');
-      btnSubmit.disabled = true;
-      btnSubmit.classList.add("opacity-75", "cursor-not-allowed", "transform-none");
-      btnText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i> MEMPROSES DATA...';
-
-      const data = {
-        nama: document.getElementById('nama').value,
-        noHp: document.getElementById('noHp').value,
-        instansi: document.getElementById('instansi').value,
-        tujuan: document.getElementById('tujuan').value,
-        keperluan: document.getElementById('keperluan').value,
-        ttdBase64: canvas.toDataURL('image/png'),
-        fotoBase64: null
-      };
-
-      const fileInput = document.getElementById('foto');
-      if (fileInput.files.length > 0) {
-        const file = fileInput.files[0];
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          data.fotoBase64 = event.target.result;
-          kirimKeAppsScript(data);
-        };
-        reader.readAsDataURL(file);
-      } else {
-        kirimKeAppsScript(data);
-      }
-    }
-
-    function kirimKeAppsScript(data) {
-      google.script.run
-        .withSuccessHandler(function(response) {
-          if (response.success) {
-            Swal.fire({
-              icon: 'success',
-              title: 'Berhasil!',
-              text: response.message,
-              confirmButtonColor: '#10b981'
-            });
-            document.getElementById('guestForm').reset();
-            clearCanvas();
-          } else {
-            Swal.fire({
-              icon: 'error',
-              title: 'Gagal',
-              text: response.message,
-              confirmButtonColor: '#ef4444'
-            });
-          }
-          resetSubmitBtn();
-        })
-        .withFailureHandler(function(error) {
-          Swal.fire({
-            icon: 'error',
-            title: 'Terjadi Kesalahan',
-            text: error.message || error,
-            confirmButtonColor: '#ef4444'
-          });
-          resetSubmitBtn();
-        })
-        .simpanDataKunjungan(data);
-    }
-
-    function resetSubmitBtn() {
-      const btnSubmit = document.getElementById('btnSubmit');
-      const btnText = document.getElementById('btnText');
-      btnSubmit.disabled = false;
-      btnSubmit.classList.remove("opacity-75", "cursor-not-allowed", "transform-none");
-      btnText.innerHTML = '<i class="fas fa-paper-plane mr-2"></i> SIMPAN DATA KUNJUNGAN';
-    }
-  </script>
 </body>
 </html>
